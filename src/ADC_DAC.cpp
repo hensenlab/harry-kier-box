@@ -18,7 +18,6 @@ EventResponder g_SPI0Event;
 EventResponder g_SPI1Event;
 ADCDAC adc_dac(g_SPI0Event, g_SPI1Event);
 
-
 int32_t g_adc_results[ADC_COUNT];
 int32_t g_dac_data[DAC_COUNT];
 IntervalTimer sample_timer;
@@ -29,8 +28,6 @@ void trigger_adcs()
 {
   adc_dac.start_conversion();
 }
-
-
 
 void SPI1EventResponder(EventResponderRef event_responder) 
 {
