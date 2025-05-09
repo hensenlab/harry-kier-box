@@ -18,7 +18,6 @@
 #include <IntervalTimer.h>
 #include <adc_dac_io.h>
 
-ADCDAC        adc_dac;                          // Uit adc_dac_io.h bibliotheek
 IntervalTimer sample_timer;                     // De timer routine
 
 int32_t       ADC[ADC_COUNT];                   // Array van gemeten integer waarden ADC[0] ..ADC[3] 
@@ -255,9 +254,10 @@ void loop()
   float U ;
 
   //if (adc_dac.adc_conversion())                 // Wacht tot adc_conversion==true 
+  if (true)
   {
-    while (!adc_dac.adc_busy()); {              // Haal alle ADC metingen binnen
-      adc_dac.get_adcs(); }                  // resultaten in integer array g_adc_results[]
+    while (!adc_dac.adc_busy());
+    adc_dac.get_adcs();                  // resultaten in integer array g_adc_results[]
 
     //enter your code here
         
