@@ -273,6 +273,16 @@ void trigger_adcs()                             // ***** Interrupt routine *****
 {
   adc_dac.start_conversion();
 }
+void SPI1EventResponder(EventResponderRef event_responder) 
+{
+  adc_dac.parse_adc_data(ADC);
+  adc_dac.check_for_adc_overload(ADC);
+}
+
+void SPI0EventResponder(EventResponderRef event_responder) 
+{
+  digitalWriteFast(_DAC_SYNC, HIGH);
+}
 // *******************************************************************************************************************************************************
 void setup()
 {
@@ -310,39 +320,52 @@ void setup()
   g_SPI1Event.attachImmediate(&SPI1EventResponder);
 
 }
+float i2u(int32_t i) {
+  return -float(i)/8388608*11.7/1.2 ;  // 1.2 schalingsfout door filter en ingangsversterker??
+}
+
+int32_t u2i(float u) {
+  if (u>10.){u=10.;} else if(u<-10.){u=-10.;} // Overrun bescherming
+  return int(u/11.7*8388608*1.2);   // Van float schalen en dan naar integer 
+}
+
 // *****************************************************************************
 void loop()																			// Het Hoofdprogramma
  
 {
-  float U; 
+	float U; 
 
-  if (adc_dac.adc_conversion())                 // Wacht tot adc_conversion==true 
-  {
-    while (!adc_dac.adc_busy()); {              // Haal alle ADC metingen binnen en zet DAC data klaar voor volgende interrupt.
-      adc_dac.get_adcs(ADC); }                  // resultaten in integer array g_adc_results[]
+//   if (adc_dac.adc_conversion())                 // Wacht tot adc_conversion==true 
+//   {
+	while (!adc_dac.adc_busy());              // Haal alle ADC metingen binnen en zet DAC data klaar voor volgende interrupt.
 
-    //enter your code here
-        
-    U=-float(ADC[0])/8388608*11.7/1.2 ;         // 1.2 schalingsfout door filter en ingangsversterker??
-    
-    // ***** Doe de resonantieonderdrukking *****
-    // Een array van kompensatoren lijkt handig
-    Exerceer(ResComp1,U,U);        
-    Exerceer(ResComp2,U,U); 
-    Exerceer(ResComp3,U,U); 
-    Exerceer(ResComp4,U,U); 
-    Exerceer(ResComp5,U,U); 
-    Exerceer(ResComp6,U,U);
-    Exerceer(ResComp7,U,U);
-      
-    U=50.*U;																		// Zonder deze vermenigvuldiging is de output onhandig klein (voor de skoop)
-   
-    // end of code
-    
-    if (U>10.){U=10.;} else if(U<-10.){U=-10.;} // Overrun bescherming
-    DAC[0]=int(-U/11.7*8388608 );
-    
-    adc_dac.put_dacs(DAC);                      // Wordt bij eerst volgende bemonstering aan de DACs toegevoerd
-  } // if (adc_dac.adc_conversion()) 
+	//   adc_dac.get_adcs(ADC); }                  // resultaten in integer array g_adc_results[]
+	adc_dac.get_adcs();
+
+	//enter your code here
+		
+	// U=-float(ADC[0])/8388608*11.7/1.2 ;         // 1.2 schalingsfout door filter en ingangsversterker??
+	U=i2u(ADC[0]);
+
+	// ***** Doe de resonantieonderdrukking *****
+	// Een array van kompensatoren lijkt handig
+	Exerceer(ResComp1,U,U);        
+	Exerceer(ResComp2,U,U); 
+	Exerceer(ResComp3,U,U); 
+	Exerceer(ResComp4,U,U); 
+	Exerceer(ResComp5,U,U); 
+	Exerceer(ResComp6,U,U);
+	Exerceer(ResComp7,U,U);
+		
+	U=50.*U;																		// Zonder deze vermenigvuldiging is de output onhandig klein (voor de skoop)
+
+	// end of code
+
+	// if (U>10.){U=10.;} else if(U<-10.){U=-10.;} // Overrun bescherming
+	// DAC[0]=int(-U/11.7*8388608 );
+	DAC[0]=u2i(U);
+
+	adc_dac.put_dacs(DAC);                      // Wordt bij eerst volgende bemonstering aan de DACs toegevoerd
+//    } // if (adc_dac.adc_conversion()) 
 } // loop
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
