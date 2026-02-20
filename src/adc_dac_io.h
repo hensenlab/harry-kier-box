@@ -30,6 +30,8 @@
 #define OL_LED_INTERVAL       100 //ms
 #define OL_LED_COUNT          1000 * OL_LED_INTERVAL / SAMPLE_INTERVAL
 
+#define USB_PACKET_BYTE_SIZE  4+ADC_COUNT*4+4
+#define USB_IO_BUFFER_SIZE    100
 
 class ADCDAC
 {
